@@ -2325,6 +2325,9 @@ CLI::callback_t header_opt_callback = [](CLI::results_t res) {
    return true;
 };
 
+/**
+ * todo 客户端命令行入口
+ */
 int main( int argc, char** argv ) {
    setlocale(LC_ALL, "");
    bindtextdomain(locale_domain, locale_path);

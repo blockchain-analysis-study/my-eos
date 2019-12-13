@@ -1,5 +1,7 @@
-#pragma once
-
+#pragma once // 表示该文件文件只被包含一次
+/**
+ * #pragma 预处理命令
+ */
 #include <eosio/chain/authority.hpp>
 #include <eosio/chain/chain_config.hpp>
 #include <eosio/chain/config.hpp>
@@ -9,8 +11,15 @@ namespace eosio { namespace chain {
 
 using action_name    = eosio::chain::action_name;
 
+
+/**
+ * 创建一个 用于创建新账户的 结构体
+ */
 struct newaccount {
+
+    // 发起创建新账户的源账户名称
    account_name                     creator;
+   // 新建的账户名
    account_name                     name;
    authority                        owner;
    authority                        active;

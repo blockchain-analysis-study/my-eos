@@ -1,4 +1,6 @@
 
+todo 基于 EOSIO v1.8.6 Release Notes 的源码剖析
+
 # EOSIO - The Most Powerful Infrastructure for Decentralized Applications
 
 [![Build status](https://badge.buildkite.com/370fe5c79410f7d695e4e34c500b4e86e3ac021c6b1f739e20.svg?branch=master)](https://buildkite.com/EOSIO/eosio)

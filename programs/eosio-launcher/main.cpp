@@ -1929,7 +1929,12 @@ void write_default_config(const bfs::path& cfg_file, const options_description &
    out_cfg.close();
 }
 
-
+/**
+ * todo 简化了eosd节点跨局域网或者跨更宽泛的网络的分布
+ * @param argc
+ * @param argv
+ * @return
+ */
 int main (int argc, char *argv[]) {
 
   variables_map vmap;

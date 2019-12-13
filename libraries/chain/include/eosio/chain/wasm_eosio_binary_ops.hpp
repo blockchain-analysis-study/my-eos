@@ -589,10 +589,12 @@ struct nop_mutator {
 // class to inherit from to attach specific mutators and have default behavior for all specified types
 template < typename Mutator = nop_mutator, typename ... Mutators>
 struct op_types {
+
+// todo 定义一个宏
 #define GEN_TYPE( r, T, OP ) \
    using BOOST_PP_CAT( OP, _t ) = OP < T , BOOST_PP_CAT(T, s) ...>;
    BOOST_PP_SEQ_FOR_EACH( GEN_TYPE, Mutator, WASM_OP_SEQ )
-#undef GEN_TYPE
+#undef GEN_TYPE  // 宏定义结束符
 }; // op_types
 
 

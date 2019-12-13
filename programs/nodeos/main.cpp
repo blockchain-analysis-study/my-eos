@@ -75,6 +75,12 @@ enum return_codes {
    NODE_MANAGEMENT_SUCCESS = 5
 };
 
+
+/**
+ * todo 核心的节点程序
+ *  一般情况下会启动cleos调用keosd来创建帐户和钱包
+ *   EOS 系统的核心进程，也就是所谓的 "节点"。运行时可以配置插件
+ */
 int main(int argc, char** argv)
 {
    try {
@@ -95,6 +101,8 @@ int main(int argc, char** argv)
       ilog("${name} data directory is ${d}", ("name", nodeos::config::node_executable_name)("d", app().data_dir().string()));
       app().startup();
       app().exec();
+
+      // e: 指向常量的引用，不可变更引用也不可修改所引用的对象的值
    } catch( const extract_genesis_state_exception& e ) {
       return EXTRACTED_GENESIS;
    } catch( const fixed_reversible_db_exception& e ) {

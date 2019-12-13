@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+
+#
+# todo 这个就是 构建脚本
+#     是eos项目的主编译脚本，通过运行这个脚本，就可以实现对eos项目的一键编译，
+#     脚本运行过程中主要测试了编译所需的硬件与软件环境是否满足要求以及显示编译结果
+#
 set -eo pipefail
 SCRIPT_VERSION=3.1 # Build script version (change this to re-build the CICD image)
 ##########################################################################

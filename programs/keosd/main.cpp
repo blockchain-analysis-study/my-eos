@@ -34,6 +34,12 @@ bfs::path determine_home_directory()
    return home;
 }
 
+/**
+ * todo 钱包和帐户的实现控制程序
+ * @param argc
+ * @param argv
+ * @return
+ */
 int main(int argc, char** argv)
 {
    try {
