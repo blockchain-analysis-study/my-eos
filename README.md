@@ -1,5 +1,5 @@
 
-todo 基于 EOSIO v1.8.6 Release Notes 的源码剖析
+todo 基于 EOSIO v2.0.4 Release Notes 的源码剖析
 
 # EOSIO - The Most Powerful Infrastructure for Decentralized Applications
 
