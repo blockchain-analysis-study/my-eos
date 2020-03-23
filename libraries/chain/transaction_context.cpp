@@ -260,11 +260,18 @@ namespace eosio { namespace chain {
       init( 0 );
    }
 
+   /**
+    * todo tx 上下文的执行入口， 在执行tx方法  push_transaction() 中最终走到这来
+    */
    void transaction_context::exec() {
       EOS_ASSERT( is_initialized, transaction_exception, "must first initialize" );
 
       if( apply_context_free ) {
          for( const auto& act : trx.context_free_actions ) {
+
+             /**
+              * todo 开启 action 的 schedule 重载方法1
+              */
             schedule_action( act, act.account, true, 0, 0 );
          }
       }
@@ -286,6 +293,9 @@ namespace eosio { namespace chain {
       }
    }
 
+   /**
+    * todo tx 资源处理，四舍五入，自动扣除并更新账户的资源情况
+    */
    void transaction_context::finalize() {
       EOS_ASSERT( is_initialized, transaction_exception, "must first initialize" );
 
@@ -543,6 +553,15 @@ namespace eosio { namespace chain {
       return trace->action_traces[action_ordinal-1];
    }
 
+   /**
+    * todo tx上下文执行action 的方法 <重载1>
+    * @param act
+    * @param receiver
+    * @param context_free
+    * @param creator_action_ordinal
+    * @param closest_unnotified_ancestor_action_ordinal
+    * @return
+    */
    uint32_t transaction_context::schedule_action( const action& act, account_name receiver, bool context_free,
                                                   uint32_t creator_action_ordinal,
                                                   uint32_t closest_unnotified_ancestor_action_ordinal )
@@ -556,6 +575,15 @@ namespace eosio { namespace chain {
       return new_action_ordinal;
    }
 
+   /**
+    * todo tx上下文执行action 的方法 <重载2>
+    * @param act
+    * @param receiver
+    * @param context_free
+    * @param creator_action_ordinal
+    * @param closest_unnotified_ancestor_action_ordinal
+    * @return
+    */
    uint32_t transaction_context::schedule_action( action&& act, account_name receiver, bool context_free,
                                                   uint32_t creator_action_ordinal,
                                                   uint32_t closest_unnotified_ancestor_action_ordinal )
@@ -569,6 +597,15 @@ namespace eosio { namespace chain {
       return new_action_ordinal;
    }
 
+   /**
+    * todo tx上下文执行action 的方法 <重载3>
+    * @param action_ordinal
+    * @param receiver
+    * @param context_free
+    * @param creator_action_ordinal
+    * @param closest_unnotified_ancestor_action_ordinal
+    * @return
+    */
    uint32_t transaction_context::schedule_action( uint32_t action_ordinal, account_name receiver, bool context_free,
                                                   uint32_t creator_action_ordinal,
                                                   uint32_t closest_unnotified_ancestor_action_ordinal )

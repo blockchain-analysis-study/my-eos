@@ -1398,21 +1398,64 @@ struct controller_impl {
     *  This is the entry point for new transactions to the block state. It will check authorization and
     *  determine whether to execute it now or to delay it. Lastly it inserts a transaction receipt into
     *  the pending block.
-    */
-   transaction_trace_ptr push_transaction( const transaction_metadata_ptr& trx,
-                                           fc::time_point deadline,
-                                           uint32_t billed_cpu_time_us,
-                                           bool explicit_billed_cpu_time )
-   {
-      EOS_ASSERT(deadline != fc::time_point(), transaction_exception, "deadline cannot be uninitialized");
+    *
+     * todo ########################################
+     * todo ########################################
+     * todo ########################################
+     * todo ########################################
+     *
+     * todo 非常重要的 tx 入口函数
+     *
+     * todo  这是新 tx 进入 block 状态的入口点。
+     *      它将 `检查授权` 并确定是 `立即执行` 还是 `延迟授权`。
+     *      最后，它将交易收据插入 pending block (正在被打包/处理的block)中。
+     * todo ########################################
+     * todo ########################################
+     * todo ########################################
+     * todo ########################################
+     * @param trx 事tx体
+     * @param deadline 截止时间
+     * @param billed_cpu_time_us CPU抵押时间
+     * @param explicit_billed_cpu_time CPU抵押时间是否明确，一般是false，未显式指定
+     *
+     * @return transaction_trace_ptr 事务跟踪，返回的结构体对象
+     */
+   transaction_trace_ptr push_transaction( const transaction_metadata_ptr& trx, // tx的元数据
+                                           fc::time_point deadline, // tx 的超时时间
+                                           uint32_t billed_cpu_time_us, //  CPU抵押时间
+                                           bool explicit_billed_cpu_time // CPU抵押时间是否明确，一般是false，未显式指定
+                                           )
 
+   {
+      EOS_ASSERT(deadline != fc::time_point(), transaction_exception, "deadline cannot be uninitialized"); // 校验截止时间的格式是否出现问题
+
+      /**
+       * todo 先定义了一个 tx trace 实例
+       */
       transaction_trace_ptr trace;
       try {
+
+         // 获取当前时间戳
          auto start = fc::time_point::now();
+
          const bool check_auth = !self.skip_auth_check() && !trx->implicit;
          const fc::microseconds sig_cpu_usage = trx->signature_cpu_usage();
 
          if( !explicit_billed_cpu_time ) {
+
+         // 校验权限
+         const bool check_auth = !self.skip_auth_check() && !trx->implicit; // // implicit tx 会忽略检查也可以自己设置跳过auth检查，则check_auth 为false。
+         // call recover keys so that trx->sig_cpu_usage is set correctly
+         //
+         // 调用 recover keys ，以便正确设置trx-> sig_cpu_usage
+         // 如果权限校验通过，则recover keys，否则获取ms
+         // todo 得到要使用的cpu的时间值
+             const fc::microseconds sig_cpu_usage = trx->signature_cpu_usage();
+
+             if( !explicit_billed_cpu_time ) { // 未显式指定CPU抵押时间
+
+             // 计算已消费CPU时间
+
             fc::microseconds already_consumed_time( EOS_PERCENT(sig_cpu_usage.count(), conf.sig_cpu_bill_pct) );
 
             if( start.time_since_epoch() <  already_consumed_time ) {
@@ -1424,29 +1467,39 @@ struct controller_impl {
 
          const signed_transaction& trn = trx->packed_trx()->get_signed_transaction();
          transaction_checktime_timer trx_timer(timer);
+         /**
+          * todo 创建 tx 上下文
+          */
          transaction_context trx_context(self, trn, trx->id(), std::move(trx_timer), start);
+
          if ((bool)subjective_cpu_leeway && pending->_block_status == controller::block_status::incomplete) {
             trx_context.leeway = *subjective_cpu_leeway;
          }
+         // 赋值，各种tx 中的参数到 tx 上下文中去
          trx_context.deadline = deadline;
          trx_context.explicit_billed_cpu_time = explicit_billed_cpu_time;
          trx_context.billed_cpu_time_us = billed_cpu_time_us;
          trace = trx_context.trace;
          try {
-            if( trx->implicit ) {
-               trx_context.init_for_implicit_trx();
+            if( trx->implicit ) { // 忽略检查的事务的处理办法
+               trx_context.init_for_implicit_trx(); // 检查事务资源（CPU和NET）可用性
                trx_context.enforce_whiteblacklist = false;
             } else {
                bool skip_recording = replay_head_time && (time_point(trn.expiration) <= *replay_head_time);
-               trx_context.init_for_input_trx( trx->packed_trx()->get_unprunable_size(),
-                                               trx->packed_trx()->get_prunable_size(),
+
+                // 检查 tx 资源（CPU和NET）可用性
+               trx_context.init_for_input_trx( trx->packed_trx->get_unprunable_size(),
+                                               trx->packed_trx->get_prunable_size(),
                                                skip_recording);
             }
 
             trx_context.delay = fc::seconds(trn.delay_sec);
 
+            /**
+             * todo 校验权限
+             */
             if( check_auth ) {
-               authorization.check_authorization(
+               authorization.check_authorization(  // 权限校验
                        trn.actions,
                        trx->recovered_keys(),
                        {},
@@ -1455,7 +1508,13 @@ struct controller_impl {
                        false
                );
             }
-            trx_context.exec();
+
+            /**
+             * todo 真正去 执行tx
+             */
+            trx_context.exec(); // 执行 tx 上下文，合约方法内部的校验错误会在这里抛出，使事务行为在当前节点的链上生效
+
+             // 资源处理，四舍五入，自动扣除并更新账户的资源情况
             trx_context.finalize(); // Automatically rounds up network and CPU usage in trace and bills payers if successful
 
             auto restore = make_block_restore_point();
@@ -1467,9 +1526,9 @@ struct controller_impl {
                trace->receipt = push_receipt(*trx->packed_trx(), s, trx_context.billed_cpu_time_us, trace->net_usage);
                trx->billed_cpu_time_us = trx_context.billed_cpu_time_us;
                pending->_block_stage.get<building_block>()._pending_trx_metas.emplace_back(trx);
-            } else {
+            } else { // 以上代码段都包含在try异常监控的作用域中，因此如果到此仍未发生异常而中断，则判断执行成功
                transaction_receipt_header r;
-               r.status = transaction_receipt::executed;
+               r.status = transaction_receipt::executed; // 注意：这就是客户端接收到的那个非常重要的状态executed
                r.cpu_usage_us = trx_context.billed_cpu_time_us;
                r.net_usage_words = trace->net_usage / 8;
                trace->receipt = r;
@@ -1480,7 +1539,7 @@ struct controller_impl {
             // call the accept signal but only once for this transaction
             if (!trx->accepted) {
                trx->accepted = true;
-               emit( self.accepted_transaction, trx);
+               emit( self.accepted_transaction, trx); // 发射接收事务的信号
             }
 
             emit(self.applied_transaction, std::tie(trace, trn));
@@ -1488,10 +1547,10 @@ struct controller_impl {
 
             if ( read_mode != db_read_mode::SPECULATIVE && pending->_block_status == controller::block_status::incomplete ) {
                //this may happen automatically in destructor, but I prefere make it more explicit
-               trx_context.undo();
+               trx_context.undo(); // 析构器，undo撤销操作
             } else {
                restore.cancel();
-               trx_context.squash();
+               trx_context.squash(); // 上下文刷新
             }
 
             return trace;
@@ -1505,8 +1564,9 @@ struct controller_impl {
             trace->except_ptr = std::current_exception();
          }
 
-         emit( self.accepted_transaction, trx );
-         emit( self.applied_transaction, std::tie(trace, trn) );
+         emit( self.accepted_transaction, trx );  // 发射接收事务的信号，触发controller相关信号操作
+         emit( self.applied_transaction, std::tie(trace, trn) ); // 发射应用事务的信号，触发controller相关信号操作
+
 
          return trace;
       } FC_CAPTURE_AND_RETHROW((trace))

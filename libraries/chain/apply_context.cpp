@@ -48,6 +48,9 @@ apply_context::apply_context(controller& con, transaction_context& trx_ctx, uint
    receiver = trace.receiver;
    context_free = trace.context_free;
 }
+/**
+ * apply_context 类的 exec_one() 函数
+ */
 
 void apply_context::exec_one()
 {
@@ -192,6 +195,10 @@ bool apply_context::is_account( const account_name& account )const {
    return nullptr != db.find<account_object,by_name>( account );
 }
 
+/**
+ * todo 校验 合约权限
+ * @param account
+ */
 void apply_context::require_authorization( const account_name& account ) {
    for( uint32_t i=0; i < act->authorization.size(); i++ ) {
      if( act->authorization[i].actor == account ) {
@@ -252,11 +259,18 @@ void apply_context::require_recipient( account_name recipient ) {
  *   ask the user for permission to take certain actions rather than making it implicit. This way users
  *   can better understand the security risk.
  */
+ /**
+  * todo inline 方式的跨合约调用入口 定义
+  */
+
 void apply_context::execute_inline( action&& a ) {
+
+    // todo 根据 合约 addr 找到 code
    auto* code = control.db().find<account_object, by_name>(a.account);
    EOS_ASSERT( code != nullptr, action_validate_exception,
                "inline action's code account ${account} does not exist", ("account", a.account) );
 
+   // todo 执行的 白名单和 黑名单
    bool enforce_actor_whitelist_blacklist = trx_context.enforce_whiteblacklist && control.is_producing_block();
    flat_set<account_name> actors;
 
@@ -344,10 +358,17 @@ void apply_context::execute_context_free_inline( action&& a ) {
    );
 }
 
-
+/**
+ * todo 执行延迟 tx <deferred action 合约>
+ * @param sender_id
+ * @param payer
+ * @param trx
+ * @param replace_existing
+ */
 void apply_context::schedule_deferred_transaction( const uint128_t& sender_id, account_name payer, transaction&& trx, bool replace_existing ) {
    EOS_ASSERT( trx.context_free_actions.size() == 0, cfa_inside_generated_tx, "context free actions are not currently allowed in generated transactions" );
 
+   // todo 执行action的黑白名单
    bool enforce_actor_whitelist_blacklist = trx_context.enforce_whiteblacklist && control.is_producing_block()
                                              && !control.sender_avoids_whitelist_blacklist_enforcement( receiver );
    trx_context.validate_referenced_accounts( trx, enforce_actor_whitelist_blacklist );

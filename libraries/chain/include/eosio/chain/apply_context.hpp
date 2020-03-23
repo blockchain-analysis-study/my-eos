@@ -14,6 +14,9 @@ namespace eosio { namespace chain {
 class controller;
 class transaction_context;
 
+/**
+ * todo 合约执行上下文
+ */
 class apply_context {
    private:
       template<typename T>
@@ -455,8 +458,12 @@ class apply_context {
 
       void exec_one();
       void exec();
+
+      // todo inline 方式的跨合约调用入口声明
       void execute_inline( action&& a );
       void execute_context_free_inline( action&& a );
+
+      // todo 执行延期tx
       void schedule_deferred_transaction( const uint128_t& sender_id, account_name payer, transaction&& trx, bool replace_existing );
       bool cancel_deferred_transaction( const uint128_t& sender_id, account_name sender );
       bool cancel_deferred_transaction( const uint128_t& sender_id ) { return cancel_deferred_transaction(sender_id, receiver); }

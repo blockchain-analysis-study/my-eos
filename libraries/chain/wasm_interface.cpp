@@ -1468,17 +1468,25 @@ class memory_api : public context_aware_api {
       }
 };
 
+/**
+ * todo 交易执行
+ */
 class transaction_api : public context_aware_api {
    public:
       using context_aware_api::context_aware_api;
 
+      /**
+       * todo 这个就是走 inline 跨合约调用
+       */
       void send_inline( array_ptr<char> data, uint32_t data_len ) {
+
          //TODO: Why is this limit even needed? And why is it not consistently checked on actions in input or deferred transactions
          EOS_ASSERT( data_len < context.control.get_global_properties().configuration.max_inline_action_size, inline_action_too_big,
                     "inline action too big" );
 
          action act;
          fc::raw::unpack<action>(data, data_len, act);
+         // todo 调用 inline action <跨合约调用>
          context.execute_inline(std::move(act));
       }
 
@@ -1492,9 +1500,13 @@ class transaction_api : public context_aware_api {
          context.execute_context_free_inline(std::move(act));
       }
 
-      void send_deferred( const uint128_t& sender_id, account_name payer, array_ptr<char> data, uint32_t data_len, uint32_t replace_existing) {
+      // todo  deferred_transaction  <跨合约调用 !?>
+          void send_deferred( const uint128_t& sender_id, account_name payer, array_ptr<char> data, uint32_t data_len, uint32_t replace_existing) {
+
          transaction trx;
          fc::raw::unpack<transaction>(data, data_len, trx);
+
+         // todo  deferred_transaction  <跨合约调用 !?>
          context.schedule_deferred_transaction(sender_id, payer, std::move(trx), replace_existing);
       }
 

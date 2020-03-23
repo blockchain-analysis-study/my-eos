@@ -2111,6 +2111,7 @@ void read_write::push_block(read_write::push_block_params&& params, next_functio
    } CATCH_AND_CALL(next);
 }
 
+// todo
 void read_write::push_transaction(const read_write::push_transaction_params& params, next_function<read_write::push_transaction_results> next) {
    try {
       auto pretty_input = std::make_shared<packed_transaction>();

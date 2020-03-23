@@ -3,13 +3,17 @@
 #include <fc/exception/exception.hpp>
 #include <boost/core/typeinfo.hpp>
 
-
+/**
+ * todo 定义一个校验的宏
+ */
 #define EOS_ASSERT( expr, exc_type, FORMAT, ... )                \
+// 这是 fc/exception/exception.hpp 库中定义的 宏
    FC_MULTILINE_MACRO_BEGIN                                           \
    if( !(expr) )                                                      \
       FC_THROW_EXCEPTION( exc_type, FORMAT, __VA_ARGS__ );            \
    FC_MULTILINE_MACRO_END
 
+// 抛出异常的宏
 #define EOS_THROW( exc_type, FORMAT, ... ) \
     throw exc_type( FC_LOG_MESSAGE( error, FORMAT, __VA_ARGS__ ) );
 

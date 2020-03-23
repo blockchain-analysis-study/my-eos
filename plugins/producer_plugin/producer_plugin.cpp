@@ -477,33 +477,41 @@ class producer_plugin_impl : public std::enable_shared_from_this<producer_plugin
          });
       }
 
+/**
+       * todo 对transaction_ack频道发布的数据
+       * @param trx
+       * @param persist_until_expired
+       * @param next
+       */
       bool process_incoming_transaction_async(const transaction_metadata_ptr& trx, bool persist_until_expired, next_function<transaction_trace_ptr> next) {
          bool exhausted = false;
          chain::controller& chain = chain_plug->chain();
 
          auto send_response = [this, &trx, &chain, &next](const fc::static_variant<fc::exception_ptr, transaction_trace_ptr>& response) {
-            next(response);
-            if (response.contains<fc::exception_ptr>()) {
+            next(response); // 通过next方法将response传回客户端
+            if (response.contains<fc::exception_ptr>()) { // 响应内容中有异常情况出现，则发布数据中的第一个元素为异常对象，作为transaction_ack在net插件中的result.first数据
                _transaction_ack_channel.publish(priority::low, std::pair<fc::exception_ptr, transaction_metadata_ptr>(response.get<fc::exception_ptr>(), trx));
-               if (_pending_block_mode == pending_block_mode::producing) {
+               if (_pending_block_mode == pending_block_mode::producing) { // 如果当前节点正在出块，则打印日志区块拒绝该事务
                   fc_dlog(_trx_trace_log, "[TRX_TRACE] Block ${block_num} for producer ${prod} is REJECTING tx: ${txid} : ${why} ",
                         ("block_num", chain.head_block_num() + 1)
                         ("prod", chain.pending_block_producer())
-                        ("txid", trx->id())
-                        ("why",response.get<fc::exception_ptr>()->what()));
-               } else {
+                                ("txid", trx->id())
+                        ("why",response.get<fc::exception_ptr>()->what())); // why的值为拒绝该事务的原因，即打印出异常对象的可读信息
+               } else {  // 如果当前节点尚未出块，则打印未出块节点的推测执行：拒绝该事务
                   fc_dlog(_trx_trace_log, "[TRX_TRACE] Speculative execution is REJECTING tx: ${txid} : ${why} ",
                           ("txid", trx->id())
-                          ("why",response.get<fc::exception_ptr>()->what()));
+                          ("why",response.get<fc::exception_ptr>()->what())); // 同样打印异常
+
                }
-            } else {
+            } else { // 如果响应内容中无异常，说明成功执行，则第一个元素为空
                _transaction_ack_channel.publish(priority::low, std::pair<fc::exception_ptr, transaction_metadata_ptr>(nullptr, trx));
-               if (_pending_block_mode == pending_block_mode::producing) {
+               if (_pending_block_mode == pending_block_mode::producing) { // 如果当前节点正在出块，则打印日志区块接收该事务
                   fc_dlog(_trx_trace_log, "[TRX_TRACE] Block ${block_num} for producer ${prod} is ACCEPTING tx: ${txid}",
                           ("block_num", chain.head_block_num() + 1)
                           ("prod", chain.pending_block_producer())
-                          ("txid", trx->id()));
-               } else {
+                                  ("txid", trx->id()));
+               } else { // 如果当前节点尚未出块，则打印未出块节点的推测执行：接收该事务
+
                   fc_dlog(_trx_trace_log, "[TRX_TRACE] Speculative execution is ACCEPTING tx: ${txid}",
                           ("txid", trx->id()));
                }

@@ -10,13 +10,23 @@ namespace eosio { namespace chain {
 
 class apply_context;
 
+/**
+ * todo #########################################
+ * todo #########################################
+ * todo #########################################
+ * todo #########################################
+ * todo
+ */
 class wasm_instantiated_module_interface {
    public:
+
+    // todo EOS虚拟机接口对外暴露虚拟机实例    `创建`  和 `执行` 合约入口
       virtual void apply(apply_context& context) = 0;
 
       virtual ~wasm_instantiated_module_interface();
 };
 
+// todo wasm 虚机运行时入口
 class wasm_runtime_interface {
    public:
       virtual bool inject_module(IR::Module& module) = 0;

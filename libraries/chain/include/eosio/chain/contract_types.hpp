@@ -13,7 +13,7 @@ using action_name    = eosio::chain::action_name;
 
 
 /**
- * 创建一个 用于创建新账户的 结构体
+ * todo 创建一个 用于创建新账户的 结构体
  */
 struct newaccount {
 
@@ -21,18 +21,26 @@ struct newaccount {
    account_name                     creator;
    // 新建的账户名
    account_name                     name;
+   // owner权限的描述
    authority                        owner;
+   // active权限的描述
    authority                        active;
 
+
+   // 静态方法
    static account_name get_account() {
       return config::system_account_name;
    }
 
+
+   // 静态方法
    static action_name get_name() {
       return N(newaccount);
    }
 };
 
+
+// todo 设置 合约 code
 struct setcode {
    account_name                     account;
    uint8_t                          vmtype = 0;
@@ -48,6 +56,8 @@ struct setcode {
    }
 };
 
+
+// todo 设置 合约abi
 struct setabi {
    account_name                     account;
    bytes                            abi;
@@ -62,6 +72,7 @@ struct setabi {
 };
 
 
+// todo 更新账户权限
 struct updateauth {
    account_name                      account;
    permission_name                   permission;
@@ -77,6 +88,7 @@ struct updateauth {
    }
 };
 
+// todo 删除账户权限
 struct deleteauth {
    deleteauth() = default;
    deleteauth(const account_name& account, const permission_name& permission)
@@ -95,6 +107,7 @@ struct deleteauth {
    }
 };
 
+// todo 关联账户
 struct linkauth {
    linkauth() = default;
    linkauth(const account_name& account, const account_name& code, const action_name& type, const permission_name& requirement)
@@ -115,6 +128,8 @@ struct linkauth {
    }
 };
 
+
+// todo 取消关联账户
 struct unlinkauth {
    unlinkauth() = default;
    unlinkauth(const account_name& account, const account_name& code, const action_name& type)
@@ -134,6 +149,8 @@ struct unlinkauth {
    }
 };
 
+
+// todo 取消延迟
 struct canceldelay {
    permission_level      canceling_auth;
    transaction_id_type   trx_id;
