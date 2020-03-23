@@ -1,7 +1,3 @@
-/**
- *  @file
- *  @copyright defined in eos/LICENSE
- */
 #pragma once
 #include <appbase/application.hpp>
 #include <fc/exception/exception.hpp>
@@ -79,11 +75,12 @@ namespace eosio {
         void plugin_initialize(const variables_map& options);
         void plugin_startup();
         void plugin_shutdown();
+        void handle_sighup() override;
 
-        void add_handler(const string& url, const url_handler&);
-        void add_api(const api_description& api) {
+        void add_handler(const string& url, const url_handler&, int priority = appbase::priority::medium_low);
+        void add_api(const api_description& api, int priority = appbase::priority::medium_low) {
            for (const auto& call : api)
-              add_handler(call.first, call.second);
+              add_handler(call.first, call.second, priority);
         }
 
         // standard exception handling for api handlers
@@ -101,7 +98,7 @@ namespace eosio {
         get_supported_apis_result get_supported_apis()const;
 
       private:
-        std::unique_ptr<class http_plugin_impl> my;
+        std::shared_ptr<class http_plugin_impl> my;
    };
 
    /**
